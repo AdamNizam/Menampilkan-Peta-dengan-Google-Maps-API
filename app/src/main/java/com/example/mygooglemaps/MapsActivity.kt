@@ -25,12 +25,14 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.mygooglemaps.databinding.ActivityMapsBinding
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
+    private val boundsBuilder = LatLngBounds.Builder()
     companion object {
         private const val TAG = "MapsActivity"
     }
@@ -114,7 +116,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         tourismPlace.forEach { tourism ->
             val latLng = LatLng(tourism.latitude, tourism.longitude)
             mMap.addMarker(MarkerOptions().position(latLng).title(tourism.name))
+            boundsBuilder.include(latLng)
         }
+
+        val bounds: LatLngBounds = boundsBuilder.build()
+        mMap.animateCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                bounds,
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels,
+                300
+            )
+        )
     }
 
     private fun setMapStyle() {
