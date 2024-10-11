@@ -1,6 +1,7 @@
 package com.example.mygooglemaps
 
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -24,11 +25,15 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.mygooglemaps.databinding.ActivityMapsBinding
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.MapStyleOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
+    companion object {
+        private const val TAG = "MapsActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +52,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.uiSettings.isCompassEnabled = true
         mMap.uiSettings.isMapToolbarEnabled = true
 
+        val dicodingSpace = LatLng(-6.8957643, 107.6338462)
+        mMap.addMarker(
+            MarkerOptions()
+                .position(dicodingSpace)
+                .title("Dicoding Space")
+                .snippet("Batik Kumeli No.50")
+        )
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dicodingSpace, 15f))
+
+        // Get Location
+        getMyLocation()
+
+        //Style Maps
+        setMapStyle()
+
+        // Menamahkan Marker Dalam Jumlah Bnayak
+        addManyMarker()
+
+        // pointOfInterest
+        addPointOfInterest()
+
+        // Click new Marker
+        newMarker()
+
+    }
+
+    private fun newMarker() {
         mMap.setOnMapLongClickListener { latLng ->
             mMap.addMarker(
                 MarkerOptions()
@@ -56,8 +88,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     .icon(vectorToBitmap(R.drawable.ic_house, Color.parseColor("#3DDC84")))
             )
         }
-        val dicodingSpace = LatLng(-6.8957643, 107.6338462)
+    }
 
+    private fun addPointOfInterest() {
         mMap.setOnPoiClickListener { pointOfInterest ->
             val poiMarker = mMap.addMarker(
                 MarkerOptions()
@@ -68,16 +101,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             )
             poiMarker?.showInfoWindow()
         }
+    }
 
-        mMap.addMarker(
-            MarkerOptions()
-                .position(dicodingSpace)
-                .title("Dicoding Space")
-                .snippet("Batik Kumeli No.50")
+    private fun addManyMarker() {
+        val tourismPlace = listOf(
+            TourismPlace("Floating Market Lembang", -6.8168954,107.6151046),
+            TourismPlace("The Great Asia Africa", -6.8331128,107.6048483),
+            TourismPlace("Rabbit Town", -6.8668408,107.608081),
+            TourismPlace("Alun-Alun Kota Bandung", -6.9218518,107.6025294),
+            TourismPlace("Orchid Forest Cikole", -6.780725, 107.637409),
         )
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(dicodingSpace, 15f))
-        getMyLocation()
+        tourismPlace.forEach { tourism ->
+            val latLng = LatLng(tourism.latitude, tourism.longitude)
+            mMap.addMarker(MarkerOptions().position(latLng).title(tourism.name))
+        }
+    }
 
+    private fun setMapStyle() {
+        try {
+            val success =
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style))
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.")
+            }
+        } catch (exception: Resources.NotFoundException) {
+            Log.e(TAG, "Can't find style. Error: ", exception)
+        }
     }
 
     private val requestPermissionLauncher =
